@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"math/rand"
+	"net/http"
 	"sync"
 	"time"
 
@@ -26,6 +27,10 @@ func main() {
 	flag.StringVar(&apiAddr, "api listen", ":3005", "api listen address")
 	flag.IntVar(&workers, "workers", 10, "Worker count.")
 	flag.Parse()
+
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 
 	c := controller.New(controller.InMemStore())
 	go func() {
