@@ -16,15 +16,17 @@ It has these top-level messages:
 	StartResponse
 	CreateRequest
 	CreateResponse
-	AddGameTickRequest
-	AddGameTickResponse
-	ListGameTicksRequest
-	ListGameTicksResponse
+	AddGameFrameRequest
+	AddGameFrameResponse
+	ListGameFramesRequest
+	ListGameFramesResponse
 	EndGameRequest
 	EndGameResponse
+	PingRequest
+	PingResponse
 	SnakeOptions
 	Game
-	GameTick
+	GameFrame
 	Point
 	Snake
 	Death
@@ -293,15 +295,15 @@ func TestCreateResponseProto(t *testing.T) {
 	}
 }
 
-func TestAddGameTickRequestProto(t *testing.T) {
+func TestAddGameFrameRequestProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedAddGameTickRequest(popr, false)
+	p := NewPopulatedAddGameFrameRequest(popr, false)
 	dAtA, err := proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &AddGameTickRequest{}
+	msg := &AddGameFrameRequest{}
 	if err := proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -324,15 +326,15 @@ func TestAddGameTickRequestProto(t *testing.T) {
 	}
 }
 
-func TestAddGameTickResponseProto(t *testing.T) {
+func TestAddGameFrameResponseProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedAddGameTickResponse(popr, false)
+	p := NewPopulatedAddGameFrameResponse(popr, false)
 	dAtA, err := proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &AddGameTickResponse{}
+	msg := &AddGameFrameResponse{}
 	if err := proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -355,15 +357,15 @@ func TestAddGameTickResponseProto(t *testing.T) {
 	}
 }
 
-func TestListGameTicksRequestProto(t *testing.T) {
+func TestListGameFramesRequestProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedListGameTicksRequest(popr, false)
+	p := NewPopulatedListGameFramesRequest(popr, false)
 	dAtA, err := proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &ListGameTicksRequest{}
+	msg := &ListGameFramesRequest{}
 	if err := proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -386,15 +388,15 @@ func TestListGameTicksRequestProto(t *testing.T) {
 	}
 }
 
-func TestListGameTicksResponseProto(t *testing.T) {
+func TestListGameFramesResponseProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedListGameTicksResponse(popr, false)
+	p := NewPopulatedListGameFramesResponse(popr, false)
 	dAtA, err := proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &ListGameTicksResponse{}
+	msg := &ListGameFramesResponse{}
 	if err := proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -479,6 +481,68 @@ func TestEndGameResponseProto(t *testing.T) {
 	}
 }
 
+func TestPingRequestProto(t *testing.T) {
+	seed := time.Now().UnixNano()
+	popr := rand.New(rand.NewSource(seed))
+	p := NewPopulatedPingRequest(popr, false)
+	dAtA, err := proto.Marshal(p)
+	if err != nil {
+		t.Fatalf("seed = %d, err = %v", seed, err)
+	}
+	msg := &PingRequest{}
+	if err := proto.Unmarshal(dAtA, msg); err != nil {
+		t.Fatalf("seed = %d, err = %v", seed, err)
+	}
+	littlefuzz := make([]byte, len(dAtA))
+	copy(littlefuzz, dAtA)
+	for i := range dAtA {
+		dAtA[i] = byte(popr.Intn(256))
+	}
+	if !p.Equal(msg) {
+		t.Fatalf("seed = %d, %#v !Proto %#v", seed, msg, p)
+	}
+	if len(littlefuzz) > 0 {
+		fuzzamount := 100
+		for i := 0; i < fuzzamount; i++ {
+			littlefuzz[popr.Intn(len(littlefuzz))] = byte(popr.Intn(256))
+			littlefuzz = append(littlefuzz, byte(popr.Intn(256)))
+		}
+		// shouldn't panic
+		_ = proto.Unmarshal(littlefuzz, msg)
+	}
+}
+
+func TestPingResponseProto(t *testing.T) {
+	seed := time.Now().UnixNano()
+	popr := rand.New(rand.NewSource(seed))
+	p := NewPopulatedPingResponse(popr, false)
+	dAtA, err := proto.Marshal(p)
+	if err != nil {
+		t.Fatalf("seed = %d, err = %v", seed, err)
+	}
+	msg := &PingResponse{}
+	if err := proto.Unmarshal(dAtA, msg); err != nil {
+		t.Fatalf("seed = %d, err = %v", seed, err)
+	}
+	littlefuzz := make([]byte, len(dAtA))
+	copy(littlefuzz, dAtA)
+	for i := range dAtA {
+		dAtA[i] = byte(popr.Intn(256))
+	}
+	if !p.Equal(msg) {
+		t.Fatalf("seed = %d, %#v !Proto %#v", seed, msg, p)
+	}
+	if len(littlefuzz) > 0 {
+		fuzzamount := 100
+		for i := 0; i < fuzzamount; i++ {
+			littlefuzz[popr.Intn(len(littlefuzz))] = byte(popr.Intn(256))
+			littlefuzz = append(littlefuzz, byte(popr.Intn(256)))
+		}
+		// shouldn't panic
+		_ = proto.Unmarshal(littlefuzz, msg)
+	}
+}
+
 func TestSnakeOptionsProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
@@ -541,15 +605,15 @@ func TestGameProto(t *testing.T) {
 	}
 }
 
-func TestGameTickProto(t *testing.T) {
+func TestGameFrameProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedGameTick(popr, false)
+	p := NewPopulatedGameFrame(popr, false)
 	dAtA, err := proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &GameTick{}
+	msg := &GameFrame{}
 	if err := proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -809,16 +873,16 @@ func TestCreateResponseJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestAddGameTickRequestJSON(t *testing.T) {
+func TestAddGameFrameRequestJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedAddGameTickRequest(popr, true)
+	p := NewPopulatedAddGameFrameRequest(popr, true)
 	marshaler := jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &AddGameTickRequest{}
+	msg := &AddGameFrameRequest{}
 	err = jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -827,16 +891,16 @@ func TestAddGameTickRequestJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestAddGameTickResponseJSON(t *testing.T) {
+func TestAddGameFrameResponseJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedAddGameTickResponse(popr, true)
+	p := NewPopulatedAddGameFrameResponse(popr, true)
 	marshaler := jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &AddGameTickResponse{}
+	msg := &AddGameFrameResponse{}
 	err = jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -845,16 +909,16 @@ func TestAddGameTickResponseJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestListGameTicksRequestJSON(t *testing.T) {
+func TestListGameFramesRequestJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedListGameTicksRequest(popr, true)
+	p := NewPopulatedListGameFramesRequest(popr, true)
 	marshaler := jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &ListGameTicksRequest{}
+	msg := &ListGameFramesRequest{}
 	err = jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -863,16 +927,16 @@ func TestListGameTicksRequestJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestListGameTicksResponseJSON(t *testing.T) {
+func TestListGameFramesResponseJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedListGameTicksResponse(popr, true)
+	p := NewPopulatedListGameFramesResponse(popr, true)
 	marshaler := jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &ListGameTicksResponse{}
+	msg := &ListGameFramesResponse{}
 	err = jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -917,6 +981,42 @@ func TestEndGameResponseJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
+func TestPingRequestJSON(t *testing.T) {
+	seed := time.Now().UnixNano()
+	popr := rand.New(rand.NewSource(seed))
+	p := NewPopulatedPingRequest(popr, true)
+	marshaler := jsonpb.Marshaler{}
+	jsondata, err := marshaler.MarshalToString(p)
+	if err != nil {
+		t.Fatalf("seed = %d, err = %v", seed, err)
+	}
+	msg := &PingRequest{}
+	err = jsonpb.UnmarshalString(jsondata, msg)
+	if err != nil {
+		t.Fatalf("seed = %d, err = %v", seed, err)
+	}
+	if !p.Equal(msg) {
+		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
+	}
+}
+func TestPingResponseJSON(t *testing.T) {
+	seed := time.Now().UnixNano()
+	popr := rand.New(rand.NewSource(seed))
+	p := NewPopulatedPingResponse(popr, true)
+	marshaler := jsonpb.Marshaler{}
+	jsondata, err := marshaler.MarshalToString(p)
+	if err != nil {
+		t.Fatalf("seed = %d, err = %v", seed, err)
+	}
+	msg := &PingResponse{}
+	err = jsonpb.UnmarshalString(jsondata, msg)
+	if err != nil {
+		t.Fatalf("seed = %d, err = %v", seed, err)
+	}
+	if !p.Equal(msg) {
+		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
+	}
+}
 func TestSnakeOptionsJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
@@ -953,16 +1053,16 @@ func TestGameJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestGameTickJSON(t *testing.T) {
+func TestGameFrameJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedGameTick(popr, true)
+	p := NewPopulatedGameFrame(popr, true)
 	marshaler := jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &GameTick{}
+	msg := &GameFrame{}
 	err = jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -1249,12 +1349,12 @@ func TestCreateResponseProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestAddGameTickRequestProtoText(t *testing.T) {
+func TestAddGameFrameRequestProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedAddGameTickRequest(popr, true)
+	p := NewPopulatedAddGameFrameRequest(popr, true)
 	dAtA := proto.MarshalTextString(p)
-	msg := &AddGameTickRequest{}
+	msg := &AddGameFrameRequest{}
 	if err := proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1263,12 +1363,12 @@ func TestAddGameTickRequestProtoText(t *testing.T) {
 	}
 }
 
-func TestAddGameTickRequestProtoCompactText(t *testing.T) {
+func TestAddGameFrameRequestProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedAddGameTickRequest(popr, true)
+	p := NewPopulatedAddGameFrameRequest(popr, true)
 	dAtA := proto.CompactTextString(p)
-	msg := &AddGameTickRequest{}
+	msg := &AddGameFrameRequest{}
 	if err := proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1277,12 +1377,12 @@ func TestAddGameTickRequestProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestAddGameTickResponseProtoText(t *testing.T) {
+func TestAddGameFrameResponseProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedAddGameTickResponse(popr, true)
+	p := NewPopulatedAddGameFrameResponse(popr, true)
 	dAtA := proto.MarshalTextString(p)
-	msg := &AddGameTickResponse{}
+	msg := &AddGameFrameResponse{}
 	if err := proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1291,12 +1391,12 @@ func TestAddGameTickResponseProtoText(t *testing.T) {
 	}
 }
 
-func TestAddGameTickResponseProtoCompactText(t *testing.T) {
+func TestAddGameFrameResponseProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedAddGameTickResponse(popr, true)
+	p := NewPopulatedAddGameFrameResponse(popr, true)
 	dAtA := proto.CompactTextString(p)
-	msg := &AddGameTickResponse{}
+	msg := &AddGameFrameResponse{}
 	if err := proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1305,12 +1405,12 @@ func TestAddGameTickResponseProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestListGameTicksRequestProtoText(t *testing.T) {
+func TestListGameFramesRequestProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedListGameTicksRequest(popr, true)
+	p := NewPopulatedListGameFramesRequest(popr, true)
 	dAtA := proto.MarshalTextString(p)
-	msg := &ListGameTicksRequest{}
+	msg := &ListGameFramesRequest{}
 	if err := proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1319,12 +1419,12 @@ func TestListGameTicksRequestProtoText(t *testing.T) {
 	}
 }
 
-func TestListGameTicksRequestProtoCompactText(t *testing.T) {
+func TestListGameFramesRequestProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedListGameTicksRequest(popr, true)
+	p := NewPopulatedListGameFramesRequest(popr, true)
 	dAtA := proto.CompactTextString(p)
-	msg := &ListGameTicksRequest{}
+	msg := &ListGameFramesRequest{}
 	if err := proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1333,12 +1433,12 @@ func TestListGameTicksRequestProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestListGameTicksResponseProtoText(t *testing.T) {
+func TestListGameFramesResponseProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedListGameTicksResponse(popr, true)
+	p := NewPopulatedListGameFramesResponse(popr, true)
 	dAtA := proto.MarshalTextString(p)
-	msg := &ListGameTicksResponse{}
+	msg := &ListGameFramesResponse{}
 	if err := proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1347,12 +1447,12 @@ func TestListGameTicksResponseProtoText(t *testing.T) {
 	}
 }
 
-func TestListGameTicksResponseProtoCompactText(t *testing.T) {
+func TestListGameFramesResponseProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedListGameTicksResponse(popr, true)
+	p := NewPopulatedListGameFramesResponse(popr, true)
 	dAtA := proto.CompactTextString(p)
-	msg := &ListGameTicksResponse{}
+	msg := &ListGameFramesResponse{}
 	if err := proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1417,6 +1517,62 @@ func TestEndGameResponseProtoCompactText(t *testing.T) {
 	}
 }
 
+func TestPingRequestProtoText(t *testing.T) {
+	seed := time.Now().UnixNano()
+	popr := rand.New(rand.NewSource(seed))
+	p := NewPopulatedPingRequest(popr, true)
+	dAtA := proto.MarshalTextString(p)
+	msg := &PingRequest{}
+	if err := proto.UnmarshalText(dAtA, msg); err != nil {
+		t.Fatalf("seed = %d, err = %v", seed, err)
+	}
+	if !p.Equal(msg) {
+		t.Fatalf("seed = %d, %#v !Proto %#v", seed, msg, p)
+	}
+}
+
+func TestPingRequestProtoCompactText(t *testing.T) {
+	seed := time.Now().UnixNano()
+	popr := rand.New(rand.NewSource(seed))
+	p := NewPopulatedPingRequest(popr, true)
+	dAtA := proto.CompactTextString(p)
+	msg := &PingRequest{}
+	if err := proto.UnmarshalText(dAtA, msg); err != nil {
+		t.Fatalf("seed = %d, err = %v", seed, err)
+	}
+	if !p.Equal(msg) {
+		t.Fatalf("seed = %d, %#v !Proto %#v", seed, msg, p)
+	}
+}
+
+func TestPingResponseProtoText(t *testing.T) {
+	seed := time.Now().UnixNano()
+	popr := rand.New(rand.NewSource(seed))
+	p := NewPopulatedPingResponse(popr, true)
+	dAtA := proto.MarshalTextString(p)
+	msg := &PingResponse{}
+	if err := proto.UnmarshalText(dAtA, msg); err != nil {
+		t.Fatalf("seed = %d, err = %v", seed, err)
+	}
+	if !p.Equal(msg) {
+		t.Fatalf("seed = %d, %#v !Proto %#v", seed, msg, p)
+	}
+}
+
+func TestPingResponseProtoCompactText(t *testing.T) {
+	seed := time.Now().UnixNano()
+	popr := rand.New(rand.NewSource(seed))
+	p := NewPopulatedPingResponse(popr, true)
+	dAtA := proto.CompactTextString(p)
+	msg := &PingResponse{}
+	if err := proto.UnmarshalText(dAtA, msg); err != nil {
+		t.Fatalf("seed = %d, err = %v", seed, err)
+	}
+	if !p.Equal(msg) {
+		t.Fatalf("seed = %d, %#v !Proto %#v", seed, msg, p)
+	}
+}
+
 func TestSnakeOptionsProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
@@ -1473,12 +1629,12 @@ func TestGameProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestGameTickProtoText(t *testing.T) {
+func TestGameFrameProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedGameTick(popr, true)
+	p := NewPopulatedGameFrame(popr, true)
 	dAtA := proto.MarshalTextString(p)
-	msg := &GameTick{}
+	msg := &GameFrame{}
 	if err := proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1487,12 +1643,12 @@ func TestGameTickProtoText(t *testing.T) {
 	}
 }
 
-func TestGameTickProtoCompactText(t *testing.T) {
+func TestGameFrameProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := rand.New(rand.NewSource(seed))
-	p := NewPopulatedGameTick(popr, true)
+	p := NewPopulatedGameFrame(popr, true)
 	dAtA := proto.CompactTextString(p)
-	msg := &GameTick{}
+	msg := &GameFrame{}
 	if err := proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}

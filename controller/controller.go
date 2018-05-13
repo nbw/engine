@@ -9,10 +9,14 @@ import (
 
 	"github.com/battlesnakeio/engine/controller/pb"
 	"github.com/battlesnakeio/engine/rules"
+	"github.com/battlesnakeio/engine/version"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+// MaxTicks is the maximum amount of ticks that can be returned.
+const MaxTicks = 100
 
 // New will initialize a new Server.
 func New(store Store) *Server {
@@ -47,21 +51,21 @@ func (s *Server) Pop(ctx context.Context, _ *pb.PopRequest) (*pb.PopResponse, er
 	return &pb.PopResponse{ID: id, Token: token}, nil
 }
 
-// Status retrieves the game state including the last processed game tick.
+// Status retrieves the game state including the last processed game frame.
 func (s *Server) Status(ctx context.Context, req *pb.StatusRequest) (*pb.StatusResponse, error) {
 	game, err := s.Store.GetGame(ctx, req.ID)
 	if err != nil {
 		return nil, err
 	}
-	var lastTick *pb.GameTick
-	ticks, err := s.Store.ListGameTicks(ctx, req.ID, 1, -1)
+	var lastFrame *pb.GameFrame
+	frames, err := s.Store.ListGameFrames(ctx, req.ID, 1, -1)
 	if err != nil {
 		return nil, err
 	}
-	if len(ticks) > 0 {
-		lastTick = ticks[0]
+	if len(frames) > 0 {
+		lastFrame = frames[0]
 	}
-	return &pb.StatusResponse{Game: game, LastTick: lastTick}, nil
+	return &pb.StatusResponse{Game: game, LastFrame: lastFrame}, nil
 }
 
 // Start starts the game running, and will make it ready to be picked up by a
@@ -76,11 +80,11 @@ func (s *Server) Start(ctx context.Context, req *pb.StartRequest) (*pb.StartResp
 
 // Create creates a new game, but doesn't start running frames.
 func (s *Server) Create(ctx context.Context, req *pb.CreateRequest) (*pb.CreateResponse, error) {
-	game, ticks, err := rules.CreateInitialGame(req)
+	game, frames, err := rules.CreateInitialGame(req)
 	if err != nil {
 		return nil, err
 	}
-	err = s.Store.CreateGame(ctx, game, ticks)
+	err = s.Store.CreateGame(ctx, game, frames)
 	if err != nil {
 		return nil, err
 	}
@@ -89,13 +93,13 @@ func (s *Server) Create(ctx context.Context, req *pb.CreateRequest) (*pb.CreateR
 	}, nil
 }
 
-// AddGameTick adds a new game tick to the game. A lock must be held for this
+// AddGameFrame adds a new game frame to the game. A lock must be held for this
 // call to succeed.
-func (s *Server) AddGameTick(ctx context.Context, req *pb.AddGameTickRequest) (*pb.AddGameTickResponse, error) {
+func (s *Server) AddGameFrame(ctx context.Context, req *pb.AddGameFrameRequest) (*pb.AddGameFrameResponse, error) {
 	token := pb.ContextGetLockToken(ctx)
 
-	if req.GameTick == nil {
-		return nil, status.Error(codes.InvalidArgument, "controller: game tick must not be nil")
+	if req.GameFrame == nil {
+		return nil, status.Error(codes.InvalidArgument, "controller: game frame must not be nil")
 	}
 
 	// Lock the game again, if this fails, the lock is not valid.
@@ -104,10 +108,7 @@ func (s *Server) AddGameTick(ctx context.Context, req *pb.AddGameTickRequest) (*
 		return nil, err
 	}
 
-	// TODO: Need to check that game tick follows the sequence from the previous
-	// tick here.
-
-	err = s.Store.PushGameTick(ctx, req.ID, req.GameTick)
+	err = s.Store.PushGameFrame(ctx, req.ID, req.GameFrame)
 	if err != nil {
 		return nil, err
 	}
@@ -115,26 +116,23 @@ func (s *Server) AddGameTick(ctx context.Context, req *pb.AddGameTickRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	return &pb.AddGameTickResponse{
+	return &pb.AddGameFrameResponse{
 		Game: game,
 	}, nil
 }
 
-// ListGameTicks will list all game ticks given a limit and offset.
-func (s *Server) ListGameTicks(ctx context.Context, req *pb.ListGameTicksRequest) (*pb.ListGameTicksResponse, error) {
-	if req.Limit == 0 {
-		req.Limit = 50
+// ListGameFrames will list all game frames given a limit and offset.
+func (s *Server) ListGameFrames(ctx context.Context, req *pb.ListGameFramesRequest) (*pb.ListGameFramesResponse, error) {
+	if req.Limit == 0 || req.Limit >= MaxTicks {
+		req.Limit = MaxTicks
 	}
-	if req.Limit > 50 {
-		req.Limit = 50
-	}
-	ticks, err := s.Store.ListGameTicks(ctx, req.ID, int(req.Limit), int(req.Offset))
+	frames, err := s.Store.ListGameFrames(ctx, req.ID, int(req.Limit), int(req.Offset))
 	if err != nil {
 		return nil, err
 	}
-	return &pb.ListGameTicksResponse{
-		Ticks: ticks,
-		Count: int32(len(ticks)),
+	return &pb.ListGameFramesResponse{
+		Frames: frames,
+		Count:  int32(len(frames)),
 	}, nil
 }
 
@@ -162,6 +160,11 @@ func (s *Server) EndGame(ctx context.Context, req *pb.EndGameRequest) (*pb.EndGa
 	}
 
 	return &pb.EndGameResponse{}, nil
+}
+
+// Ping returns the health and current version of the server.
+func (s *Server) Ping(ctx context.Context, req *pb.PingRequest) (*pb.PingResponse, error) {
+	return &pb.PingResponse{Version: version.Version}, nil
 }
 
 // Serve will intantiate a grpc server.

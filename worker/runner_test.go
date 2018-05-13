@@ -2,7 +2,6 @@ package worker
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -44,18 +43,18 @@ func TestWorker_RunnerErrors(t *testing.T) {
 		)
 	})
 
-	t.Run("GameTickError", func(t *testing.T) {
+	t.Run("GameFrameError", func(t *testing.T) {
 		store.CreateGame(ctx, &pb.Game{ID: "1", Status: rules.GameStatusRunning}, nil)
 
 		err := w.run(ctx, 1)
 		require.NotNil(t, err)
-		require.Equal(t, "rules: invalid state, previous tick is nil", err.Error())
+		require.Equal(t, "rules: invalid state, previous frame is nil", err.Error())
 	})
 
-	t.Run("GameTickLocked", func(t *testing.T) {
+	t.Run("GameFrameLocked", func(t *testing.T) {
 		store.CreateGame(ctx,
 			&pb.Game{ID: "2", Status: rules.GameStatusRunning},
-			[]*pb.GameTick{{}},
+			[]*pb.GameFrame{{}},
 		)
 		w.RunGame = func(c context.Context, cl pb.ControllerClient, id string) error {
 			md, _ := metadata.FromOutgoingContext(c)
@@ -140,9 +139,7 @@ func TestWorker_Runner(t *testing.T) {
 	}
 
 	for key, game := range games {
-		t.Run(fmt.Sprintf("%s", key), func(t *testing.T) {
-			t.Parallel()
-
+		t.Run(key, func(t *testing.T) {
 			g, err := client.Create(ctx, game)
 			require.Nil(t, err)
 
