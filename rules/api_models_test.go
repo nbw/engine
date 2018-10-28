@@ -43,15 +43,15 @@ func TestBuildSnakeRequestWithOnlyAliveSnakes(t *testing.T) {
 					{X: 2, Y: 2},
 					{X: 1, Y: 2},
 				},
-        Death: &pb.Death {
-          Cause: DeathCauseStarvation,
-          Turn: 3,
-        },
+				Death: &pb.Death{
+					Cause: DeathCauseStarvation,
+					Turn:  3,
+				},
 			},
 		},
 	}, "snake_123")
-  require.Len(t, req.Board.Snakes, 1)
-  require.Equal(t,"snake_123", req.Board.Snakes[0].ID)
+	require.Len(t, req.Board.Snakes, 1)
+	require.Equal(t, "snake_123", req.Board.Snakes[0].ID)
 	require.Equal(t, []Coords{{X: 1, Y: 1}}, req.Board.Snakes[0].Body)
 	require.Equal(t, []Coords{{X: 1, Y: 1}}, req.You.Body)
 }
